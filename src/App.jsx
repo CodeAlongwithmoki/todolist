@@ -31,8 +31,6 @@ const App = () => {
   const [inputOne, setInputOne] = useState("");
   const [data, setData] = useState([]);
 
-  const [id, setId] = useState("");
-
   useEffect(() => {
     const fetchData = async () => {
       const snapshot = await onSnapshot(colRef, (snapshot) => {
@@ -54,20 +52,17 @@ const App = () => {
     }).then(() => setInputOne(""));
   };
 
-  const deleteForm = (e) => {
-    e.preventDefault();
+  const deleteStff = (id) => {
     const docRef = doc(db, "messages", id);
 
-    deleteDoc(docRef).then(() => {
-      setId("");
-    });
+    deleteDoc(docRef).then(() => {});
   };
 
   return (
     <div>
       <h1>Firebase Todolist</h1>
       <form onSubmit={addForm}>
-        <h2>Add Document</h2>
+        <h2>Add Todo</h2>
         <input
           type="text"
           value={inputOne}
@@ -75,16 +70,13 @@ const App = () => {
         />
         <button>Add</button>
       </form>
-      <form onSubmit={deleteForm}>
-        <h2>Delete Document</h2> id{" "}
-        <input type="text" value={id} onChange={(e) => setId(e.target.value)} />
-        <button>Delete</button>
-      </form>
+
       <ul>
         {data.map((item) => (
           <li key={item["id"]}>
             {" "}
-            {item["text"]} - {item["id"]}
+            {item["text"]}{" "}
+            <button onClick={() => deleteStff(item["id"])}>delete</button>
           </li>
         ))}
       </ul>
