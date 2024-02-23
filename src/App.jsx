@@ -1,13 +1,7 @@
+import Todolist from "./components/todolist";
+import React from "react";
 import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  onSnapshot,
-  addDoc,
-  deleteDoc,
-  doc,
-  getDocs,
-} from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useState, useEffect } from "react";
 
 const firebaseConfig = {
@@ -21,65 +15,40 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-const db = getFirestore();
-
-const colRef = collection(db, "messages");
-
-import React from "react";
+const auth = getAuth();
+const provider = new GoogleAuthProvider();
 
 const App = () => {
-  const [inputOne, setInputOne] = useState("");
-  const [data, setData] = useState([]);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const snapshot = await onSnapshot(colRef, (snapshot) => {
-        let messages = [];
-        snapshot.docs.forEach((doc) => {
-          messages.push({ ...doc.data(), id: doc.id });
-        });
-        setData(messages);
-      });
-    };
-
-    fetchData();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
+    });
   }, []);
 
-  const addForm = (e) => {
-    e.preventDefault();
-    addDoc(colRef, {
-      text: inputOne,
-    }).then(() => setInputOne(""));
-  };
-
-  const deleteStff = (id) => {
-    const docRef = doc(db, "messages", id);
-
-    deleteDoc(docRef).then(() => {});
+  const signInAsync = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
     <div>
-      <h1>Firebase Todolist</h1>
-      <form onSubmit={addForm}>
-        <h2>Add Todo</h2>
-        <input
-          type="text"
-          value={inputOne}
-          onChange={(e) => setInputOne(e.target.value)}
-        />
-        <button>Add</button>
-      </form>
-
-      <ul>
-        {data.map((item) => (
-          <li key={item["id"]}>
-            {" "}
-            {item["text"]}{" "}
-            <button onClick={() => deleteStff(item["id"])}>delete</button>
-          </li>
-        ))}
-      </ul>
+      {user ? (
+        <Todolist user={user} />
+      ) : (
+        <div>
+          <h1>Todolist</h1>
+          <button onClick={signInAsync}>Signin</button>
+        </div>
+      )}
     </div>
   );
 };
